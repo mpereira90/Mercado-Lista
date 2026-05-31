@@ -1,0 +1,56 @@
+stages:
+  - install
+  - test
+  - build
+  - deploy
+
+variables:
+  NODE_VERSION: "18"
+
+cache:
+  paths:
+    - node_modules/
+
+install:
+  stage: install
+  image: node:18-alpine
+  script:
+    - npm ci
+  artifacts:
+    paths:
+      - node_modules/
+    expire_in: 1 hour
+
+test:
+  stage: test
+  image: node:18-alpine
+  script:
+    - npm test -- --watchAll=false --passWithNoTests
+  dependencies:
+    - install
+
+build:
+  stage: build
+  image: node:18-alpine
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - build/
+    expire_in: 1 day
+  dependencies:
+    - install
+  variables:
+    REACT_APP_SUPABASE_URL: $REACT_APP_SUPABASE_URL
+    REACT_APP_SUPABASE_ANON_KEY: $REACT_APP_SUPABASE_ANON_KEY
+
+deploy:
+  stage: deploy
+  image: node:18-alpine
+  script:
+    - npm install -g vercel
+    - vercel --prod --token=$VERCEL_TOKEN --yes
+  dependencies:
+    - build
+  only:
+    - main

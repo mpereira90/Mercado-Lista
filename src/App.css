@@ -1,0 +1,38 @@
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #F8F9FA;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, button, select {
+  font-family: inherit;
+}
+
+/* Esconder scrollbar horizontal nos filtros */
+::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* iOS safe areas */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .fab-container {
+    bottom: calc(32px + env(safe-area-inset-bottom));
+  }
+}
