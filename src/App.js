@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react'
 import { useItens } from './hooks/useItens'
 import { ModalAdicionar } from './components/ModalAdicionar'
+import { ModalValor } from './components/ModalValor'
 import { ItemCard } from './components/ItemCard'
 import { FiltroCategoria } from './components/FiltroCategoria'
 import './App.css'
 
 export default function App() {
-  const { itens, loading, online, adicionarItem, removerItem, toggleConcluido, limparConcluidos } = useItens()
+  const { itens, loading, online, adicionarItem, removerItem, toggleConcluido, limparConcluidos, registrarValor } = useItens()
   const [modalAberto, setModalAberto] = useState(false)
+  const [itemParaValor, setItemParaValor] = useState(null)
   const [categoriaFiltro, setCategoriaFiltro] = useState('todos')
   const [busca, setBusca] = useState('')
   const [mostrarConcluidos, setMostrarConcluidos] = useState(true)
@@ -33,6 +35,34 @@ export default function App() {
 
   const totalConcluidos = itens.filter(i => i.concluido).length
   const progresso = itens.length > 0 ? (totalConcluidos / itens.length) * 100 : 0
+
+  const totalGasto = itens
+    .filter(i => i.concluido && i.valor != null && i.valor > 0)
+    .reduce((acc, i) => acc + Number(i.valor), 0)
+
+  const handleToggle = (id) => {
+    const item = itens.find(i => i.id === id)
+    if (!item) return
+    if (!item.concluido) {
+      // Vai marcar como comprado — pedir o valor
+      toggleConcluido(id)
+      setItemParaValor(item)
+    } else {
+      // Desmarcar — sem perguntar valor
+      toggleConcluido(id)
+    }
+  }
+
+  const handleConfirmarValor = (valor) => {
+    if (itemParaValor) {
+      registrarValor(itemParaValor.id, valor)
+    }
+    setItemParaValor(null)
+  }
+
+  const handleLimpar = () => {
+    limparConcluidos()
+  }
 
   return (
     <div style={{
@@ -71,7 +101,7 @@ export default function App() {
 
           {totalConcluidos > 0 && (
             <button
-              onClick={limparConcluidos}
+              onClick={handleLimpar}
               style={{
                 background: '#FFF3F3', color: '#FF5252',
                 border: 'none', borderRadius: 10,
@@ -79,7 +109,7 @@ export default function App() {
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              Limpar ✓
+              Limpar lista
             </button>
           )}
         </div>
@@ -95,6 +125,20 @@ export default function App() {
               borderRadius: 2,
               transition: 'width 0.4s ease',
             }} />
+          </div>
+        )}
+
+        {/* Total gasto */}
+        {totalGasto > 0 && (
+          <div style={{
+            background: '#F0FFF4', borderRadius: 10,
+            padding: '10px 14px', marginBottom: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            <span style={{ fontSize: 13, color: '#2E7D32', fontWeight: 500 }}>💰 Total até agora</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: '#2E7D32' }}>
+              R$ {totalGasto.toFixed(2)}
+            </span>
           </div>
         )}
 
@@ -162,8 +206,7 @@ export default function App() {
                   <ItemCard
                     key={item.id}
                     item={item}
-                    onToggle={toggleConcluido}
-                    onRemover={removerItem}
+                    onToggle={handleToggle}
                   />
                 ))}
               </div>
@@ -189,8 +232,7 @@ export default function App() {
                   <ItemCard
                     key={item.id}
                     item={item}
-                    onToggle={toggleConcluido}
-                    onRemover={removerItem}
+                    onToggle={handleToggle}
                   />
                 ))}
               </div>
@@ -221,11 +263,20 @@ export default function App() {
         +
       </button>
 
-      {/* Modal */}
+      {/* Modal adicionar */}
       {modalAberto && (
         <ModalAdicionar
           onAdicionar={adicionarItem}
           onFechar={() => setModalAberto(false)}
+        />
+      )}
+
+      {/* Modal valor */}
+      {itemParaValor && (
+        <ModalValor
+          item={itemParaValor}
+          onConfirmar={handleConfirmarValor}
+          onFechar={() => setItemParaValor(null)}
         />
       )}
     </div>

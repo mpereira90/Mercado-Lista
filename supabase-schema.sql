@@ -30,3 +30,6 @@ create policy "Acesso publico aos itens"
 
 -- Habilitar realtime (opcional - para sync em tempo real)
 alter publication supabase_realtime add table public.itens;
+
+-- Adicionar coluna valor (caso já tenha criado a tabela antes)
+alter table public.itens add column if not exists valor numeric default null;
